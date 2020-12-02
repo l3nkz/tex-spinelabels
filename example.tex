@@ -1,0 +1,45 @@
+\documentclass{article}
+
+\usepackage[a4paper,margin=1cm,landscape]{geometry}
+
+\usepackage{spinelabel}
+
+\usepackage{xcolor}
+\usepackage{pgfplots}
+
+\pgfplotsset{compat=1.16, compat/show suggested version=false}
+\usetikzlibrary{pgfplots.colorbrewer}
+
+\thispagestyle{empty}
+
+\colorlet{color1}{Blues-J}
+\colorlet{color2}{Greens-J}
+
+\begin{document}
+\begin{spinelabel}[heading color=color1]{Stuff}
+    \begin{spineitems}
+        \spineitem{Foo}{}
+        \spineitem{Bar}{Description}
+        \spineitem{Bar}{Description 2}
+        \spineitem{Foobar}{Other Description}
+        \spineitem{Stuff}{More}
+    \end{spineitems}
+\end{spinelabel}
+\qquad%
+\begin{spinelabel}[heading color=color1]{Other Stuff}
+    \begin{spineitems}
+        \spineitem{Baz}{}
+        \spineitem{Bazz}{}
+        \spineitem{Bazzer}{}
+        \spineitem{FooBar}{}
+        \begin{spinesubitems}
+            \spinesubitem{Item 1}
+            \spinesubitem{Item 2}
+        \end{spinesubitems}
+        \spineitem{FooBaz}{}
+        \spineitem{Foozer}{Description}
+    \end{spineitems}
+\end{spinelabel}%
+\qquad%
+\rotatedspinelabel[color=color2, cut marks=borders]{Bonk}
+\end{document}
