@@ -1,0 +1,208 @@
+\NeedsTeXFormat{LaTeX2e}[1994/06/01]
+\ProvidesPackage{spinelabel}[2018/10/11]
+
+\RequirePackage{xifthen}
+\RequirePackage{enumitem}
+\RequirePackage{xcolor}
+\RequirePackage{pgfkeys}
+\RequirePackage{tikz}
+
+\usetikzlibrary{calc, shapes.multipart}
+
+% Environment and Commands for items inside a spine label
+\newenvironment{spineitems}{%
+    \begin{itemize}[label=\textcolor{bullets}{\textbullet}, leftmargin=5mm, topsep=0pt]
+}{%
+    \end{itemize}
+}
+
+\newcommand{\spineitem}[2]{\item%
+    \ifthenelse{\isempty{#2}}%
+        {\textbf{\color{item}#1}}%
+        {\textbf{\color{item}#1}\newline\textit{#2}}%
+}
+
+% Environment and Commands for subitems inside a spine label
+\newenvironment{spinesubitems}{%
+    \begin{itemize}[label=\textcolor{subbullets}{\textbullet}, leftmargin=8mm]
+}{%
+    \end{itemize}
+}
+
+\newcommand{\spinesubitem}[1]{\item \textcolor{subitem}{#1}}
+
+% TikZ styles for the various cut mark that are available
+\tikzset{
+    no cut marks/.style n args={3}{},
+    cut ticks/.style n args={3}{
+        append after command={\pgfextra{
+            \draw (\tikzlastnode.#1) -- +(-2mm, 0)
+                  (\tikzlastnode.#1) -- +(0, 2mm)
+                  ($ (\tikzlastnode.#1) + (#2, 0) $) -- +(2mm, 0)
+                  ($ (\tikzlastnode.#1) + (#2, 0) $) -- +(0, 2mm)
+                  ($ (\tikzlastnode.#1) + (0, -#3) $) -- +(-2mm, 0)
+                  ($ (\tikzlastnode.#1) + (0, -#3) $) -- +(0, -2mm)
+                  ($ (\tikzlastnode.#1) + (#2, -#3) $) -- +(2mm, 0)
+                  ($ (\tikzlastnode.#1) + (#2, -#3) $) -- +(0, -2mm);
+            }
+        },
+    },
+    cut crosses/.style n args={3}{
+        append after command={\pgfextra{
+            \draw ($ (\tikzlastnode.#1) + (-2mm, 0) $) -- +(4mm, 0)
+                  ($ (\tikzlastnode.#1) + (0, -2mm) $) -- +(0, 4mm)
+                  ($ (\tikzlastnode.#1) + (#2, 0) + (-2mm, 0) $) -- +(4mm, 0)
+                  ($ (\tikzlastnode.#1) + (#2, 0) + (0, -2mm) $) -- +(0, 4mm)
+                  ($ (\tikzlastnode.#1) + (0, -#3) + (-2mm, 0) $) -- +(4mm, 0)
+                  ($ (\tikzlastnode.#1) + (0, -#3) + (0, -2mm) $) -- +(0, 4mm)
+                  ($ (\tikzlastnode.#1) + (#2, -#3) + (-2mm, 0) $) -- +(4mm, 0)
+                  ($ (\tikzlastnode.#1) + (#2, -#3) + (0, -2mm) $) -- +(0, 4mm);
+            }
+        },
+    },
+    cut borders/.style n args={3}{
+        append after command={\pgfextra{
+                \draw (\tikzlastnode.#1) -- ++(#2, 0) -- ++(0, -#3) -- ++(-#2, 0) -- cycle;
+            }
+        },
+    },
+}
+
+%%
+% A normal spine label with an itemize
+%%
+\tikzset{
+    spine label/.style n args={3}{
+        inner sep=0pt,
+        rectangle split,
+        rectangle split parts=2,
+        rectangle split draw splits=false,
+        every text node part/.style={heading, align=center},
+        every two node part/.style={item, align=left},
+        text width=#1,
+        #3={north west}{#1}{#2},
+    },
+}
+
+\pgfkeys{%
+    /spine/.is family,
+    /spine,
+    % define the available keys
+    width/.estore in=\spinewidth,
+    height/.estore in=\spineheight,
+    heading color/.estore in=\headingcol,
+    item color/.estore in=\itemcol,
+    subitem color/.estore in=\subitemcol,
+    bullets color/.estore in=\bulletscol,
+    subbullets color/.estore in=\subbulletscol,
+    heading font/.store in=\headingfont,
+    items font/.store in=\itemsfont,
+    top sep/.estore in=\spinetopsep,
+    middle sep/.estore in=\spinemiddlesep,
+    cut marks/.style={all cut marks/#1/.get=\spinecutmarks},
+    % defaults
+    default/.style={
+        % dimensions
+        width=50mm,
+        height=158mm,
+        % colors
+        heading color=black,
+        item color=black,
+        subitem color=black,
+        bullets color=black,
+        subbullets color=black,
+        % font
+        heading font=\bfseries\Large,
+        items font=\small,
+        % spacing
+        top sep=5mm,
+        middle sep=8mm,
+        % cut marks
+        cut marks=ticks
+    },
+    % define the available cut marks
+    all cut marks/.cd,
+        ticks/.initial=cut ticks,
+        crosses/.initial=cut crosses,
+        borders/.initial=cut borders,
+        none/.initial=no cut marks,
+}
+
+\newenvironment{spinelabel}[2][]{%
+    \pgfkeys{/spine, default, #1}%
+    % define the individual colors
+    \colorlet{heading}{\headingcol}%
+    \colorlet{item}{\itemcol}%
+    \colorlet{subitem}{\subitemcol}%
+    \colorlet{bullets}{\bulletscol}%
+    \colorlet{subbullets}{\subbulletscol}%
+    % start the tikz picture with our node inside
+    \begin{tikzpicture}[heading/.style={font=\headingfont}, item/.style={font=\itemsfont}]%
+        \node[spine label={\spinewidth}{\spineheight}{\spinecutmarks}] \bgroup%
+            \\[\spinetopsep]
+            \textcolor{heading}{#2}\vphantom{g}
+            \nodepart{two}%
+            \\[\spinemiddlesep]
+}{%
+        \egroup;%
+    \end{tikzpicture}%
+}
+
+
+%%
+% A spine label with one rotated large text on it
+%%
+\tikzset{
+    rotated spine label/.style n args={3}{
+        inner sep=0pt,
+        minimum height=#1, minimum width=#2,
+        text width=#2,
+        align=center,
+        rotate=90,
+        text font,
+        #3={north east}{#1}{#2},
+    },
+}
+
+\pgfkeys{%
+    /rotated spine/.is family,
+    /rotated spine,
+    % define the available keys
+    width/.estore in=\rotspinewidth,
+    height/.estore in=\rotspineheight,
+    color/.estore in=\rotspinecol,
+    font/.store in=\rotspinefont,
+    cut marks/.style={all cut marks/#1/.get=\rotspinecutmarks},
+    % defaults
+    default/.style={
+        % dimensions
+        width=50mm,
+        height=158mm,
+        % colors
+        color=black,
+        % font
+        font=\bfseries\Huge,
+        % cut marks
+        cut marks=ticks
+    },
+    % define the available cut marks
+    all cut marks/.cd,
+        ticks/.initial=cut ticks,
+        crosses/.initial=cut crosses,
+        borders/.initial=cut borders,
+        none/.initial=no cut marks,
+}
+
+\newcommand{\rotatedspinelabel}[2][]{%
+    \pgfkeys{/rotated spine, default, #1}%
+    % define the individual colors
+    \colorlet{text}{\rotspinecol}%
+    % start the tikz picture with our node inside
+    \begin{tikzpicture}[text font/.style={font=\rotspinefont}]%
+        \node[rotated spine label={\rotspinewidth}{\rotspineheight}{\rotspinecutmarks}] \bgroup%
+            \textcolor{\rotspinecol}{#2}
+        \egroup;%
+    \end{tikzpicture}%
+}
+
+\endinput
